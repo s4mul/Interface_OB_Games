@@ -21,18 +21,12 @@ public class PlayerController : NetworkBehaviour
         // IsOwner: 이 객체가 현재 플레이어(로컬 클라이언트)의 것인지 확인
         // Owner가 아닌 경우(다른 플레이어의 캐릭터라면), 입력 제어 코드를 비활성화하여
         // 내 입력이 남의 캐릭터에 적용되지 않도록 막음
-        /*
+        
         if (!IsOwner)
         {
             enabled = false;
-            Debug.Log("sibal");
-
         }
-        else
-        {
-            Debug.Log("ok");
-        }
-        */
+        
     }
 
 
