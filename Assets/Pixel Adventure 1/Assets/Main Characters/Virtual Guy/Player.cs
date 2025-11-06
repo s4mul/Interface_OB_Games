@@ -1,7 +1,8 @@
+using Unity.Netcode;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class Player : MonoBehaviour
+public class Player : NetworkBehaviour 
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
 
@@ -20,6 +21,7 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (!IsOwner) return;
         HandleMovement();
         FlipCharacterX();
     }
