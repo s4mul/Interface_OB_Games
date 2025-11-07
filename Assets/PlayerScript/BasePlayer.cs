@@ -9,6 +9,7 @@ public class BasePlayer: NetworkBehaviour
     [SerializeField] protected float speed = 1.0f;
     [SerializeField] protected SpriteRenderer spriteRenderer;
     [SerializeField] protected Animator animator;
+    [SerializeField] protected Collider2D interactiveDetector;
     protected Vector2 movement; protected float playerHalfWidth;
     protected float xPosLastFrame;
 
