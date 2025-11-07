@@ -1,8 +1,3 @@
-using Unity.Collections;
-using Unity.Netcode;
-using Unity.VisualScripting;
-using UnityEngine;
-
 public class Person: BasePlayer 
 { 
     // [ServerRpc] 
