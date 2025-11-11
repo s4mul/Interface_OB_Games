@@ -1,5 +1,6 @@
 using Unity.Collections;
 using Unity.Netcode;
+using Unity.Netcode.Components;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -12,6 +13,9 @@ public class BasePlayer : NetworkBehaviour
     [SerializeField] protected float speed = 5.0f;
     [SerializeField] protected SpriteRenderer spriteRenderer;
     [SerializeField] protected Animator animator;
+    [SerializeField] protected Collider2D interactiveDetector;
+    protected Vector2 movement; protected float playerHalfWidth;
+    protected float xPosLastFrame;
 
     // NEW: 물리 처리를 위한 Rigidbody 2D 변수
     protected Rigidbody2D rb;
