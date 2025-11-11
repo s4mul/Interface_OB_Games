@@ -22,6 +22,8 @@ public class ServerBootstrap : MonoBehaviour
 
     private void StartServer()
     {
+        NetworkManager.Singleton.NetworkConfig.PlayerPrefab = null;
+
         //init Netcode
         if (NetworkManager.Singleton == null)
         {
@@ -40,10 +42,12 @@ public class ServerBootstrap : MonoBehaviour
             // SceneRelay 인스턴스 생성
             var relayObj = Instantiate(sceneRelayPrefab);
             relayObj.GetComponent<NetworkObject>().Spawn(true);
+            DontDestroyOnLoad(relayObj);
             _sceneRelay = relayObj.GetComponent<SceneRelay>();
 
             //클라이언트 접속 이벤트 감지
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
         }
         else
         {
@@ -59,5 +63,16 @@ public class ServerBootstrap : MonoBehaviour
         playerObj.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId);
 
         Debug.Log($"Spawned player for client {clientId}");
+    }
+
+    private void OnClientDisconnected(ulong clientId)
+    {
+        if (NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var client))
+        {
+            if (client.PlayerObject != null && client.PlayerObject.IsSpawned)
+                client.PlayerObject.Despawn();
+        }
+
+        Debug.Log($"Client disconnected: {clientId}");
     }
 }
