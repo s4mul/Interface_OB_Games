@@ -13,7 +13,7 @@ TagManager:
   - UI
   - 
   - 
-  - 
+  - Platforms
   - 
   - 
   - 
@@ -44,6 +44,7 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+<<<<<<< HEAD
   - name: character
     uniqueID: 386341335
     locked: 0
@@ -52,3 +53,11 @@ TagManager:
     locked: 0
   m_RenderingLayers:
   - Default
+=======
+  - name: Perspective
+    uniqueID: 3420322187
+    locked: 0
+  - name: Top
+    uniqueID: 282671577
+    locked: 0
+>>>>>>> NetworkMarge
