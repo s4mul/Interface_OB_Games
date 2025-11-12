@@ -2,7 +2,7 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!78 &1
 TagManager:
-  serializedVersion: 2
+  serializedVersion: 3
   tags: []
   layers:
   - Default
@@ -38,12 +38,26 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: background
+    uniqueID: 3101184449
+    locked: 0
   - name: Default
     uniqueID: 0
     locked: 0
+<<<<<<< HEAD
+  - name: character
+    uniqueID: 386341335
+    locked: 0
+  - name: walls
+    uniqueID: 4173825461
+    locked: 0
+  m_RenderingLayers:
+  - Default
+=======
   - name: Perspective
     uniqueID: 3420322187
     locked: 0
   - name: Top
     uniqueID: 282671577
     locked: 0
+>>>>>>> NetworkMarge

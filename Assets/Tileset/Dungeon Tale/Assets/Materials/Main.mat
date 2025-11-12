@@ -21,8 +21,12 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Main
+<<<<<<< HEAD
+  m_Shader: {fileID: -6465566751694194690, guid: f43243d562e134a4d920a9d904e91521, type: 3}
+=======
   m_Shader: {fileID: -6465566751694194690, guid: f43243d562e134a4d920a9d904e91521,
     type: 3}
+>>>>>>> NetworkMarge
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
