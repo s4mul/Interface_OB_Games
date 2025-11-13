@@ -2,57 +2,71 @@
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 
-
 public class ClientBootstrap : MonoBehaviour
 {
-    [SerializeField] private string serverIp = "100.99.57.78"; // Tailscale IP
+    [SerializeField] private string serverIp = "100.99.57.78";
     [SerializeField] private ushort port = 7777;
+
+    private bool clientStarted = false;
+
+    private void Awake()
+    {
+        DontDestroyOnLoad(gameObject);
+    }
 
     private void Start()
     {
 #if UNITY_SERVER || UNITY_DEDICATED_SERVER
-        Debug.Log("[ClientBootstrap] Dedicated Server detected. Client will not start.");
+        // 서버 빌드에서는 클라를 시작하지 않음
         return;
 #else
-        Debug.Log("[ClientBootstrap] Starting Netcode client...");
         StartClient();
 #endif
-
     }
 
     private void StartClient()
     {
-        // Netcode 초기화
+        if (clientStarted) return;
+
         if (NetworkManager.Singleton == null)
         {
-            Debug.LogError("NetworkManager not found in scene!");
+            Debug.LogError("[ClientBootstrap] NetworkManager not found!");
             return;
         }
+
+        clientStarted = true;
 
         NetworkManager.Singleton.NetworkConfig.EnableSceneManagement = false;
 
         var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
         transport.SetConnectionData(serverIp, port);
-        if (NetworkManager.Singleton.StartClient())
-        {
-            Debug.Log("Client started successfully");
-        }
-        else
-        {
-            Debug.LogError("Failed to start client");
-        }
 
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+
+        if (!NetworkManager.Singleton.StartClient())
+        {
+            Debug.LogError("[ClientBootstrap] Failed to start client");
+        }
+        else
+        {
+            Debug.Log("[ClientBootstrap] Client started, connecting to server...");
+        }
     }
 
     private void OnClientConnected(ulong clientId)
     {
-        Debug.Log($"[ClientBootstrap] Connected to server (ClientId: {clientId})");
+        if (clientId != NetworkManager.Singleton.LocalClientId)
+            return;
+
+        Debug.Log("[ClientBootstrap] Connected to server.");
     }
 
     private void OnClientDisconnected(ulong clientId)
     {
-        Debug.Log($"[ClientBootstrap] Disconnected from server (ClientId: {clientId})");
+        if (clientId != NetworkManager.Singleton.LocalClientId)
+            return;
+
+        Debug.Log("[ClientBootstrap] Disconnected from server.");
     }
 }
