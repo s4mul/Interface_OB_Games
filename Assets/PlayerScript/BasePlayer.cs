@@ -3,6 +3,7 @@ using Unity.Netcode;
 using Unity.Netcode.Components;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 // Rigidbody 2D 컴포넌트가 이 오브젝트에 꼭 필요하다고 명시합니다.
 [RequireComponent(typeof(Rigidbody2D))]
@@ -14,6 +15,8 @@ public class BasePlayer : NetworkBehaviour
     [SerializeField] protected SpriteRenderer spriteRenderer;
     [SerializeField] protected Animator animator;
     [SerializeField] protected Collider2D interactiveDetector;
+    [SerializeField] private InputActionAsset inputActions;
+    
     protected Vector2 movement; protected float playerHalfWidth;
     protected float xPosLastFrame;
 
@@ -21,8 +24,8 @@ public class BasePlayer : NetworkBehaviour
     protected Rigidbody2D rb;
     // NEW: 입력 값을 저장할 변수
     protected Vector2 movementInput;
+    private InputAction moveAction;
 
-    // MODIFIED: Awake에서 컴포넌트를 가져옵니다.
     protected virtual void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -31,7 +34,14 @@ public class BasePlayer : NetworkBehaviour
     // OnNetworkSpawn은 네트워크 관련 초기화에 사용
     public override void OnNetworkSpawn()
     {
-        // playerHalfWidth와 xPosLastFrame는 이제 사용하지 않습니다.
+        if (!IsOwner) return;
+
+        // Enable the action map for local player
+        var map = inputActions.FindActionMap("Player");
+        map.Enable();
+
+        // Cache movement action
+        moveAction = map.FindAction("Move");
     }
 
     // Update는 매 프레임 호출 (입력 처리에 적합)
@@ -55,33 +65,17 @@ public class BasePlayer : NetworkBehaviour
     // NEW: 입력 처리와 시각적 처리를 담당
     private void HandleInputAndVisuals()
     {
-        float xinput = Input.GetAxisRaw("Horizontal");
-        float yinput = Input.GetAxisRaw("Vertical");
+        if (moveAction == null) return;
 
-        // 대각선 이동이 더 빠르지 않도록 입력을 정규화(normalized)
-        movementInput = new Vector2(xinput, yinput).normalized;
+        // Read input from InputAction
+        movementInput = moveAction.ReadValue<Vector2>();
 
-        // --- 애니메이션 처리 ---
-        // movementInput.magnitude는 벡터의 크기(길이)입니다. 0보다 크면 움직이는 중.
-        if (movementInput.magnitude > 0.1f)
-        {
-            animator.SetBool("isRunning", true);
-        }
-        else
-        {
-            animator.SetBool("isRunning", false);
-        }
+        // Animation
+        animator.SetBool("isRunning", movementInput.magnitude > 0.1f);
 
-        // --- 캐릭터 뒤집기 (입력 기반) ---
-        // 실제 위치가 아닌 '입력'을 기준으로 뒤집어야 벽에 부딪혔을 때도 방향을 유지합니다.
-        if (xinput > 0)
-        {
-            spriteRenderer.flipX = false; // 오른쪽
-        }
-        else if (xinput < 0)
-        {
-            spriteRenderer.flipX = true; // 왼쪽
-        }
+        // Flip sprite based on X input
+        if (movementInput.x > 0) spriteRenderer.flipX = false;
+        else if (movementInput.x < 0) spriteRenderer.flipX = true;
     }
 
     // MODIFIED: 이제 Rigidbody의 velocity를 사용해 이동합니다.

@@ -1,14 +1,14 @@
 using Unity.Netcode;
 using UnityEngine;
 
-public class Door : NetworkBehaviour, IInteractable
+public class Door : BaseNetworkInteractable 
 {
-    public NetworkVariable<bool> isOpen = new NetworkVariable<bool>(false);
+    public NetworkVariable<bool> isOpen = new NetworkVariable<bool>();
     public int doorId { get; private set; }
     private SpriteRenderer spriteRenderer;
     private BoxCollider2D boxCollider2D; 
     [SerializeField] private Sprite closedSprite;
-    [SerializeField] private Sprite opendSprite;
+    [SerializeField] private Sprite openedSprite;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public override void OnNetworkSpawn()
@@ -19,20 +19,18 @@ public class Door : NetworkBehaviour, IInteractable
         boxCollider2D = GetComponent<BoxCollider2D>();
     }
 
-
-
-    public void Interact()
+    public override void Interact()
     {
         if (!CanInteract()) return;
         print("is interacting");
-        isOpen.Value = !isOpen.Value;
         if (isOpen.Value)
             openDoor();
         else
             closeDoor(); 
+        isOpen.Value = !isOpen.Value;
     }
 
-    public bool CanInteract()
+    public override bool CanInteract()
     {
         return true;
     }
@@ -40,14 +38,15 @@ public class Door : NetworkBehaviour, IInteractable
     private void openDoor()
     {
         print("isOpened");
-        boxCollider2D.enabled = false;        
-        spriteRenderer.sprite = opendSprite;
+        boxCollider2D.offset = new Vector2(0.0f, 0.71875f);      
+        boxCollider2D.size = new Vector2(0.2f, 1.4375f);
+        spriteRenderer.sprite = openedSprite;
     }
     private void closeDoor()
     {
         print("isClosed");
-        boxCollider2D.enabled = false;        
-        boxCollider2D.enabled = true;        
+        boxCollider2D.offset = new Vector2(0.5f, 0.71875f);      
+        boxCollider2D.size = new Vector2(1.0f, 1.4375f);
         spriteRenderer.sprite = closedSprite;
     }
 }

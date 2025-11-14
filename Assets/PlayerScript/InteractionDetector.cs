@@ -6,10 +6,12 @@ using UnityEngine.InputSystem;
 public class InteractionDetector : MonoBehaviour
 {
     private IInteractable currentInteractableObject = null;
+    [SerializeField] private InputActionAsset inputActions; // assign your .inputactions asset in Inspector
+    private PlayerInput playerInput;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-
+        InitializeForLocalPlayer();
     }
 
     // Update is called once per frame
@@ -18,9 +20,19 @@ public class InteractionDetector : MonoBehaviour
         
     }
 
+
+    public void InitializeForLocalPlayer()
+    {
+        playerInput = gameObject.AddComponent<PlayerInput>();
+        playerInput.actions = inputActions;
+        playerInput.defaultActionMap = "InteractionDetecter";
+        playerInput.notificationBehavior = PlayerNotifications.InvokeCSharpEvents;
+        playerInput.onActionTriggered += OnInteract;
+    } 
+
     public void OnInteract(InputAction.CallbackContext context)
     {
-        if (context.performed)
+        if (context.action.name == "Interact" && context.performed)
         {
             print("did stuff");
             currentInteractableObject?.Interact();
@@ -38,7 +50,7 @@ public class InteractionDetector : MonoBehaviour
 
     private void OnTriggerExit2D(Collider2D collision)
     {
-        print("Now leaving behind" + collision.gameObject.name);
+        print("Now leaving " + collision.gameObject.name);
         if (collision.TryGetComponent(out IInteractable interactable) && interactable == currentInteractableObject)
         {
             currentInteractableObject = null;
