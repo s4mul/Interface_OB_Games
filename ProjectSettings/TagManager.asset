@@ -38,17 +38,14 @@ TagManager:
   - 
   - 
   m_SortingLayers:
-  - name: background
-    uniqueID: 3101184449
-    locked: 0
   - name: Default
     uniqueID: 0
     locked: 0
-  - name: character
-    uniqueID: 386341335
+  - name: Perspective
+    uniqueID: 1283273188
     locked: 0
-  - name: walls
-    uniqueID: 4173825461
+  - name: Top
+    uniqueID: 1502599955
     locked: 0
   m_RenderingLayers:
   - Default
