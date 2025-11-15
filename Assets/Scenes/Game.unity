@@ -4103,6 +4103,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Monster
       objectReference: {fileID: 0}
+    - target: {fileID: 1456100534097337269, guid: d6a65b230a960044eb055f8825addaad, type: 3}
+      propertyPath: m_SortingLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1456100534097337269, guid: d6a65b230a960044eb055f8825addaad, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 386341335
+      objectReference: {fileID: 0}
     - target: {fileID: 3399386848099569026, guid: d6a65b230a960044eb055f8825addaad, type: 3}
       propertyPath: m_LocalPosition.x
       value: -7.15
@@ -4145,7 +4153,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7863540189789067981, guid: d6a65b230a960044eb055f8825addaad, type: 3}
       propertyPath: GlobalObjectIdHash
-      value: 1053242028
+      value: 3660529887
       objectReference: {fileID: 0}
     - target: {fileID: 7863540189789067981, guid: d6a65b230a960044eb055f8825addaad, type: 3}
       propertyPath: InScenePlacedSourceGlobalObjectIdHash
@@ -4201,7 +4209,7 @@ MonoBehaviour:
   m_Intensity: 1
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000c151d8b8b585c7f8d7190717
+  m_ApplyToSortingLayers: 00000000c151d8b8b585c7f8
   m_LightCookieSprite: {fileID: 0}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0

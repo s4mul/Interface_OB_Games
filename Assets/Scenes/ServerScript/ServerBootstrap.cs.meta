@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 39812491b895f644ca83ce1b066f2bba
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - sceneRelayPrefab: {fileID: 6346571901851987675, guid: 551bd22dfd924f647a145be9bab58386, type: 3}
+  - clientRelayPrefab: {fileID: 6629003646086135038, guid: b7c3225f1aa8fc4469cd433170b41bb0, type: 3}
+  - playerPrefab: {fileID: 1701649160430667347, guid: 0fb4d33b4d8a16a4db47e002c1d6dc24, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
