@@ -75,7 +75,7 @@ public class BasePlayer : NetworkBehaviour
 
         HandleInput();
     }
-
+    /* 서버 연동되면서 필요 없어짐
     private void FixedUpdate()
     {
         // 이동도 Owner만 처리
@@ -83,7 +83,7 @@ public class BasePlayer : NetworkBehaviour
 
         HandleMovement();
     }
-
+    */
     private void HandleInput()
     {
         float xinput = Input.GetAxisRaw("Horizontal");
@@ -104,17 +104,21 @@ public class BasePlayer : NetworkBehaviour
         {
             facingRight.Value = false;
         }
-    }
 
+        MoveServerRpc(movementInput);
+    }
+    /*
     private void HandleMovement()
     {
         // Rigidbody의 속도(velocity)를 직접 설정
         rb.linearVelocity = movementInput * speed;
     }
-
+    */
     [ServerRpc]
-    public void TestServerRpc()
+    public void MoveServerRpc(Vector2 input)
     {
-        // 테스트용
+        if (!IsServer) return;
+        rb.linearVelocity = input * speed;
+
     }
 }
