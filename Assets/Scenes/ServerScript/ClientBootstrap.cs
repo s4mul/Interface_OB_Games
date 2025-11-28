@@ -11,6 +11,7 @@ public class ClientBootstrap : MonoBehaviour
 
     private void Awake()
     {
+        // 클라이언트 부트스트랩은 씬이 바뀌어도 유지
         DontDestroyOnLoad(gameObject);
     }
 
@@ -22,6 +23,15 @@ public class ClientBootstrap : MonoBehaviour
 #else
         StartClient();
 #endif
+    }
+
+    private void OnDestroy()
+    {
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+        }
     }
 
     private void StartClient()
@@ -36,6 +46,7 @@ public class ClientBootstrap : MonoBehaviour
 
         clientStarted = true;
 
+        // 서버에서만 씬을 관리하고, 클라 쪽은 커스텀 씬 로딩 사용
         NetworkManager.Singleton.NetworkConfig.EnableSceneManagement = false;
 
         var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
@@ -56,6 +67,9 @@ public class ClientBootstrap : MonoBehaviour
 
     private void OnClientConnected(ulong clientId)
     {
+        if (NetworkManager.Singleton == null)
+            return;
+
         if (clientId != NetworkManager.Singleton.LocalClientId)
             return;
 
@@ -64,6 +78,9 @@ public class ClientBootstrap : MonoBehaviour
 
     private void OnClientDisconnected(ulong clientId)
     {
+        if (NetworkManager.Singleton == null)
+            return;
+
         if (clientId != NetworkManager.Singleton.LocalClientId)
             return;
 

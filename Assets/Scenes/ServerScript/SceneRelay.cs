@@ -1,18 +1,33 @@
 using UnityEngine;
 using Unity.Netcode;
 using System.Collections.Generic;
+using System;
 
 public class SceneRelay : NetworkBehaviour
 {
     public static SceneRelay Instance { get; private set; }
 
+    // 각 클라이언트 ↔ 해당 ClientRelay 매핑
     private readonly Dictionary<ulong, ClientRelay> clientRelays = new();
-    private readonly HashSet<ulong> loadedClients = new();
+
+    // 씬 로드 상태
+    private readonly HashSet<ulong> lobbyLoadedClients = new();
+    private readonly HashSet<ulong> gameLoadedClients = new();
+
+    // 플레이어 스폰 여부
     private readonly HashSet<ulong> spawnedPlayers = new();
 
     private GameObject playerPrefab;
+
+    // ServerBootstrap에서 SetInitialSceneName으로 세팅됨
     private string initialSceneName = "LobbyScene";
 
+    // 게임 맵 씬 이름 (인스펙터에서 바꾸거나, 그냥 "GameMap" 쓰면 됨)
+    [SerializeField] private string gameSceneName = "GameMap";
+
+    // ───────────────────────────────────
+    // 설정
+    // ───────────────────────────────────
     public void SetPlayerPrefab(GameObject prefab)
     {
         playerPrefab = prefab;
@@ -27,51 +42,42 @@ public class SceneRelay : NetworkBehaviour
     {
         if (!IsServer)
         {
-            // 클라에서는 필요 없는 객체
             Destroy(gameObject);
             return;
         }
 
         if (Instance != null && Instance != this)
         {
-            Debug.LogWarning("[SceneRelay] Duplicate instance detected. Destroying new one.");
             Destroy(gameObject);
             return;
         }
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
-
         Debug.Log("[SceneRelay] Server-side SceneRelay spawned.");
     }
 
     public override void OnNetworkDespawn()
     {
         if (Instance == this)
-        {
             Instance = null;
-        }
     }
 
-    /// <summary>
-    /// 새로 접속한 클라이언트 등록 + 초기 씬으로 보내기
-    /// </summary>
+    // ───────────────────────────────────
+    // 클라이언트 등록 + 로비로 이동
+    // ───────────────────────────────────
     public void RegisterClient(ulong clientId, ClientRelay relay)
     {
         if (!IsServer) return;
-        if (relay == null)
-        {
-            Debug.LogError($"[SceneRelay] RegisterClient: relay is null for client {clientId}");
-            return;
-        }
 
         clientRelays[clientId] = relay;
-        loadedClients.Remove(clientId);
+        lobbyLoadedClients.Remove(clientId);
+        gameLoadedClients.Remove(clientId);
         spawnedPlayers.Remove(clientId);
 
-        Debug.Log($"[SceneRelay] Register client {clientId}, sending to initial scene '{initialSceneName}'.");
+        Debug.Log($"[SceneRelay] Register client {clientId}, move to lobby.");
 
-        // 해당 클라이언트에게만 씬 이동 명령
+        // 무조건 로비 씬으로 보내기
         relay.SendSceneChangeClientRpc(
             initialSceneName,
             new ClientRpcParams
@@ -88,25 +94,44 @@ public class SceneRelay : NetworkBehaviour
         if (!IsServer) return;
 
         clientRelays.Remove(clientId);
-        loadedClients.Remove(clientId);
+        lobbyLoadedClients.Remove(clientId);
+        gameLoadedClients.Remove(clientId);
         spawnedPlayers.Remove(clientId);
+
+        Debug.Log($"[SceneRelay] Unregister client {clientId}");
     }
 
-    /// <summary>
-    /// 클라이언트가 특정 씬을 로드 완료했다고 보고했을 때 호출 (ClientRelay → ServerRpc → 여기)
-    /// </summary>
+    // ───────────────────────────────────
+    // 클라이언트 씬 로드 완료 보고
+    // ───────────────────────────────────
     public void NotifyClientLoaded(ulong clientId, string sceneName)
     {
         if (!IsServer) return;
 
-        Debug.Log($"[SceneRelay] Client {clientId} finished loading scene '{sceneName}'.");
+        Debug.Log($"[SceneRelay] Client {clientId} loaded '{sceneName}'");
+        Debug.Log($"[DEBUG] sceneName='{sceneName}', gameSceneName='{gameSceneName}'");
 
-        loadedClients.Add(clientId);
-
-        // 이 타이밍에 플레이어 스폰 (클라별 개별 스폰)
-        SpawnPlayerIfNeeded(clientId);
+        // 로비 씬
+        if (sceneName == initialSceneName)
+        {
+            lobbyLoadedClients.Add(clientId);
+            SpawnPlayerIfNeeded(clientId);
+        }
+        // 게임 맵 씬
+        else if (sceneName == gameSceneName)
+        {
+            gameLoadedClients.Add(clientId);
+            TryPlaceAllPlayers();
+        }
+        else
+        {
+            // 기타 씬이 있다면 여기서 필요시 처리
+        }
     }
 
+    // ───────────────────────────────────
+    // 로비 진입 시 플레이어 스폰 (최초 1회)
+    // ───────────────────────────────────
     private void SpawnPlayerIfNeeded(ulong clientId)
     {
         if (!IsServer) return;
@@ -114,7 +139,7 @@ public class SceneRelay : NetworkBehaviour
 
         if (playerPrefab == null)
         {
-            Debug.LogError("[SceneRelay] playerPrefab이 설정되어 있지 않습니다.");
+            Debug.LogError("[SceneRelay] playerPrefab not set.");
             return;
         }
 
@@ -123,7 +148,7 @@ public class SceneRelay : NetworkBehaviour
 
         if (netObj == null)
         {
-            Debug.LogError("[SceneRelay] playerPrefab에 NetworkObject가 없습니다.");
+            Debug.LogError("[SceneRelay] Player prefab has no NetworkObject.");
             Destroy(playerObj);
             return;
         }
@@ -131,36 +156,101 @@ public class SceneRelay : NetworkBehaviour
         netObj.SpawnAsPlayerObject(clientId);
         spawnedPlayers.Add(clientId);
 
-        Debug.Log($"[SceneRelay] Spawned player for client {clientId}.");
+        Debug.Log($"[SceneRelay] Spawned player for client {clientId}");
     }
 
-    /// <summary>
-    /// 클라이언트가 버튼 등으로 "다른 씬으로 보내줘" 요청했을 때 사용할 수 있는 API
-    /// (ClientRelay.RequestSceneChangeServerRpc → 여기)
-    /// </summary>
-    public void ChangeSceneForClient(ulong clientId, string sceneName)
+    // ───────────────────────────────────
+    // 게임씬에서 모든 플레이어를 SpawnPoint 위치로 배치
+    // ───────────────────────────────────
+    private void TryPlaceAllPlayers()
     {
-        if (!IsServer) return;
+        Debug.Log($"[DEBUG] loadedInGame={gameLoadedClients.Count}, totalPlayers={clientRelays.Count}");
 
-        if (!clientRelays.TryGetValue(clientId, out var relay) || relay == null)
+        // 현재 접속 중인 "실제 플레이어" 목록
+        // (clientRelays에 등록된 클라이언트만 대상으로 함)
+        int totalPlayers = clientRelays.Count;
+        int loadedInGame = gameLoadedClients.Count;
+
+        Debug.Log($"[SceneRelay] TryPlaceAllPlayers: loadedInGame={loadedInGame}, totalPlayers={totalPlayers}");
+
+        // 아직 전원이 GameMap을 로드하지 않음
+        if (loadedInGame != totalPlayers)
         {
-            Debug.LogError($"[SceneRelay] No ClientRelay found for client {clientId}.");
+            Debug.Log("[SceneRelay] Not all players loaded GameMap yet. Waiting...");
             return;
         }
 
-        loadedClients.Remove(clientId);
-        spawnedPlayers.Remove(clientId);
+        // 씬 내 SpawnPoint 수집
+        var spawnPoints = GameObject.FindObjectsOfType<SpawnPoint>();
+        if (spawnPoints == null || spawnPoints.Length == 0)
+        {
+            Debug.LogError("[SceneRelay] No SpawnPoints found in GameMap!");
+            return;
+        }
 
-        Debug.Log($"[SceneRelay] Changing scene to '{sceneName}' for client {clientId}.");
+        // index 기준 정렬
+        Array.Sort(spawnPoints, (a, b) => a.index.CompareTo(b.index));
 
-        relay.SendSceneChangeClientRpc(
-            sceneName,
-            new ClientRpcParams
-            {
-                Send = new ClientRpcSendParams
+        Debug.Log($"[SceneRelay] Found {spawnPoints.Length} spawn points. Placing players...");
+
+        int i = 0;
+        foreach (var pair in clientRelays)
+        {
+            ulong clientId = pair.Key;
+            var spawnPoint = spawnPoints[i % spawnPoints.Length];
+            PlacePlayerAtPoint(clientId, spawnPoint.transform.position);
+            i++;
+        }
+
+        Debug.Log("[SceneRelay] All players placed on GameMap spawn points.");
+    }
+
+    private void PlacePlayerAtPoint(ulong clientId, Vector3 pos)
+    {
+        if (!NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var client))
+        {
+            Debug.LogWarning($"[SceneRelay] No ConnectedClient for clientId {clientId}");
+            return;
+        }
+
+        var playerObj = client.PlayerObject;
+        if (playerObj == null)
+        {
+            Debug.LogWarning($"[SceneRelay] PlayerObject is null for clientId {clientId}");
+            return;
+        }
+
+        playerObj.transform.position = pos;
+        Debug.Log($"[SceneRelay] Player {clientId} moved to {pos}");
+    }
+
+    // ───────────────────────────────────
+    // 하나의 클라이언트 요청 → 전체 클라 씬 이동
+    // ───────────────────────────────────
+    public void ChangeSceneFromClientRequest(ulong requesterId, string sceneName)
+    {
+        if (!IsServer) return;
+
+        Debug.Log($"[SceneRelay] Client {requesterId} requested scene '{sceneName}'. Broadcasting to ALL.");
+
+        // 씬 전환 시 로드 상태 초기화
+        lobbyLoadedClients.Clear();
+        gameLoadedClients.Clear();
+
+        foreach (var pair in clientRelays)
+        {
+            ulong targetId = pair.Key;
+            var relay = pair.Value;
+
+            relay.SendSceneChangeClientRpc(
+                sceneName,
+                new ClientRpcParams
                 {
-                    TargetClientIds = new[] { clientId }
-                }
-            });
+                    Send = new ClientRpcSendParams
+                    {
+                        TargetClientIds = new[] { targetId }
+                    }
+                });
+        }
     }
 }

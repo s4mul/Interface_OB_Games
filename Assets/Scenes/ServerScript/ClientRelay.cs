@@ -9,17 +9,17 @@ public class ClientRelay : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        // 네트워크 오브젝트는 씬 전환 시 파괴되면 안 되므로, 모두 DDOL로 이동
+        DontDestroyOnLoad(gameObject);
+
         if (IsOwner && IsClient)
         {
-            // 이 클라이언트가 소유한 Relay만 활성
             LocalInstance = this;
-            DontDestroyOnLoad(gameObject);
             Debug.Log("[ClientRelay] Local owner relay spawned.");
         }
         else
         {
-            // 소유하지 않은 클라에서는 로직 안 돌리도록 둬도 됨 (Destroy까지는 선택)
-            Debug.Log("[ClientRelay] Non-owner relay instance on this client.");
+            Debug.Log("[ClientRelay] Non-owner relay instance.");
         }
     }
 
@@ -31,18 +31,17 @@ public class ClientRelay : NetworkBehaviour
         }
     }
 
-    // ─────────────────────────────────────
-    // 서버 → 클라: 특정 씬으로 이동하라는 명령
-    // ─────────────────────────────────────
+    // ───────────────────────────────────
+    // 서버 → 클라: 특정 씬 로드
+    // ───────────────────────────────────
     [ClientRpc]
     public void SendSceneChangeClientRpc(string sceneName, ClientRpcParams rpcParams = default)
     {
+        // 이 ClientRelay는 특정 클라이언트의 소유이므로, Owner인 쪽에서만 처리
         if (!IsOwner || !IsClient)
             return;
 
         Debug.Log($"[ClientRelay] Received scene change to '{sceneName}'. Loading...");
-
-        // 씬 로드 + 로딩 완료 후 서버에 보고
         StartCoroutine(LoadSceneAndNotify(sceneName));
     }
 
@@ -50,19 +49,16 @@ public class ClientRelay : NetworkBehaviour
     {
         var op = SceneManager.LoadSceneAsync(sceneName);
         while (!op.isDone)
-        {
             yield return null;
-        }
 
         Debug.Log($"[ClientRelay] Scene '{sceneName}' loaded. Notifying server...");
-
         NotifySceneLoadedServerRpc(sceneName);
     }
 
-    // ─────────────────────────────────────
-    // 클라 → 서버: 현재 씬 로드 완료 보고
-    // ─────────────────────────────────────
-    [ServerRpc(RequireOwnership = true)]
+    // ───────────────────────────────────
+    // 클라 → 서버: 씬 로드 완료 알림
+    // ───────────────────────────────────
+    [ServerRpc(RequireOwnership = false)]
     private void NotifySceneLoadedServerRpc(string sceneName, ServerRpcParams rpcParams = default)
     {
         ulong clientId = rpcParams.Receive.SenderClientId;
@@ -77,25 +73,28 @@ public class ClientRelay : NetworkBehaviour
         }
     }
 
-    // ─────────────────────────────────────
-    // (옵션) 클라에서 버튼 눌러서 씬 변경 요청하는 용도
-    // ─────────────────────────────────────
+    // ───────────────────────────────────
+    // 버튼 등에서 호출하는 씬 변경 요청
+    // ───────────────────────────────────
     public void RequestSceneChange(string sceneName)
     {
         if (!IsOwner || !IsClient) return;
 
-        Debug.Log($"[ClientRelay] Requesting scene change to '{sceneName}' to server.");
+        Debug.Log($"[ClientRelay] Requesting scene '{sceneName}' from server...");
         RequestSceneChangeServerRpc(sceneName);
     }
 
-    [ServerRpc(RequireOwnership = true)]
+    // ───────────────────────────────────
+    // 클라 → 서버: 씬 변경 요청
+    // ───────────────────────────────────
+    [ServerRpc(RequireOwnership = false)]
     private void RequestSceneChangeServerRpc(string sceneName, ServerRpcParams rpcParams = default)
     {
         ulong clientId = rpcParams.Receive.SenderClientId;
 
         if (SceneRelay.Instance != null)
         {
-            SceneRelay.Instance.ChangeSceneForClient(clientId, sceneName);
+            SceneRelay.Instance.ChangeSceneFromClientRequest(clientId, sceneName);
         }
         else
         {

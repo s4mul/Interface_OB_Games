@@ -13,7 +13,7 @@ public class ServerBootstrap : MonoBehaviour
     [SerializeField] private GameObject clientRelayPrefab;  // NetworkObject 포함
 
     [Header("Gameplay")]
-    [SerializeField] private string initialSceneName = "LobbyScene";
+    [SerializeField] private string initialSceneName = "lobbyScene";
     [SerializeField] private GameObject playerPrefab;       // NetworkObject 포함
 
     private bool started = false;
@@ -27,6 +27,16 @@ public class ServerBootstrap : MonoBehaviour
 #endif
     }
 
+    private void OnDestroy()
+    {
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+        }
+    }
+
     private void StartServer()
     {
         if (started) return;
@@ -38,14 +48,12 @@ public class ServerBootstrap : MonoBehaviour
             return;
         }
 
-        // Netcode 씬 매니지먼트는 사용하지 않음 (커스텀 방식)
+        // Netcode 씬 매니지먼트 비활성화 (우리는 수동 씬 관리 사용)
         NetworkManager.Singleton.NetworkConfig.EnableSceneManagement = false;
 
-        // Transport 설정
         var utp = NetworkManager.Singleton.GetComponent<UnityTransport>();
         utp.SetConnectionData(listenIp, port);
 
-        // 서버 시작
         if (!NetworkManager.Singleton.StartServer())
         {
             Debug.LogError("[ServerBootstrap] Failed to start server.");
@@ -54,10 +62,8 @@ public class ServerBootstrap : MonoBehaviour
 
         Debug.Log("[ServerBootstrap] Netcode server started.");
 
-        // SceneRelay 스폰 (서버 전용 싱글톤)
         SpawnSceneRelayIfNeeded();
 
-        // 클라이언트 접속 이벤트 구독
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
     }
@@ -66,7 +72,6 @@ public class ServerBootstrap : MonoBehaviour
     {
         if (SceneRelay.Instance != null)
         {
-            // 이미 존재
             SceneRelay.Instance.SetPlayerPrefab(playerPrefab);
             SceneRelay.Instance.SetInitialSceneName(initialSceneName);
             return;
@@ -96,7 +101,6 @@ public class ServerBootstrap : MonoBehaviour
 
     private void OnClientConnected(ulong clientId)
     {
-        // 서버 자신(Host 용)은 없다 가정 (Dedicated 서버)
         Debug.Log($"[ServerBootstrap] Client connected: {clientId}");
 
         if (SceneRelay.Instance == null)
@@ -105,7 +109,6 @@ public class ServerBootstrap : MonoBehaviour
             return;
         }
 
-        // 클라마다 ClientRelay 네트워크 오브젝트 생성 + 해당 클라에게 오너십 부여
         var obj = Instantiate(clientRelayPrefab);
         var netObj = obj.GetComponent<NetworkObject>();
         var relay = obj.GetComponent<ClientRelay>();
@@ -117,12 +120,9 @@ public class ServerBootstrap : MonoBehaviour
             return;
         }
 
-        // 이 클라이언트에게 소유권 부여해서 스폰
-        Debug.Log($"Spawning ClientRelay for client {clientId}");
+        Debug.Log($"[ServerBootstrap] Spawning ClientRelay for client {clientId}");
         netObj.SpawnWithOwnership(clientId, true);
-        
 
-        // SceneRelay에게 이 클라이언트 등록 + 초기 씬으로 이동 요청
         SceneRelay.Instance.RegisterClient(clientId, relay);
     }
 
