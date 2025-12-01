@@ -22,6 +22,7 @@ public class Door : BaseNetworkInteractable
     public override void Interact()
     {
         if (!CanInteract()) return;
+
         print("is interacting");
         if (isOpen.Value)
             openDoor();
