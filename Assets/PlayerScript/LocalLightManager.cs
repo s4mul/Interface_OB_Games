@@ -1,4 +1,4 @@
-uusing UnityEngine;
+using UnityEngine;
 using Unity.Netcode;
 using UnityEngine.Rendering.Universal;
 using System.Collections;
