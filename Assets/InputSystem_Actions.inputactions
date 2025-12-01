@@ -73,7 +73,7 @@
                     "name": "Sprint",
                     "type": "Button",
                     "id": "641cd816-40e6-41b4-8c3d-04687c349290",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -962,7 +962,7 @@
             ]
         },
         {
-            "name": "InteractionDetecter",
+            "name": "Interaction",
             "id": "13df7ab0-8fd9-4963-a290-90afc27de069",
             "actions": [
                 {

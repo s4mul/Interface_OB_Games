@@ -1,14 +1,14 @@
-using System;
-using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
-public class InteractionDetector : MonoBehaviour
+public class AttackInvoker: MonoBehaviour
 {
-    private IInteractable currentInteractableObject = null;
+    private Person personInRange = null;
     [SerializeField] private InputActionAsset inputActions; // assign your .inputactions asset in Inspector
     private PlayerInput playerInput;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
+    UnityEvent attackEvent;
     void Start()
     {
         InitializeForLocalPlayer();
@@ -19,7 +19,6 @@ public class InteractionDetector : MonoBehaviour
     {
         
     }
-
 
     public void InitializeForLocalPlayer()
     {
@@ -34,26 +33,29 @@ public class InteractionDetector : MonoBehaviour
     {
         if (context.action.name == "Interact" && context.performed)
         {
-            print("did stuff");
-            currentInteractableObject?.Interact();
+            print("attack");
+            if (personInRange != null)
+            {
+                attackEvent.Invoke();
+            } 
         }
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
         print("collided with " + collision.gameObject.name);
-        if (collision.TryGetComponent(out IInteractable interactable) && interactable.CanInteract())
+        if (collision.TryGetComponent(out Person target))
         {
-            currentInteractableObject = interactable;
+            personInRange = target;
         }
     }
 
     private void OnTriggerExit2D(Collider2D collision)
     {
         print("Now leaving " + collision.gameObject.name);
-        if (collision.TryGetComponent(out IInteractable interactable) && interactable == currentInteractableObject)
+        if (collision.TryGetComponent(out Person _))
         {
-            currentInteractableObject = null;
+            personInRange = null;
         }
     }
 }
