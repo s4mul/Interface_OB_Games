@@ -16,6 +16,11 @@ public class ServerBootstrap : MonoBehaviour
     [SerializeField] private string initialSceneName = "lobbyScene";
     [SerializeField] private GameObject playerPrefab;       // NetworkObject 포함
 
+    [Header("Gameplay Prefabs")]
+    [SerializeField] private GameObject monsterPrefab;
+    [SerializeField] private GameObject personPrefab;
+
+
     private bool started = false;
 
     private void Start()
@@ -135,4 +140,29 @@ public class ServerBootstrap : MonoBehaviour
             SceneRelay.Instance.UnregisterClient(clientId);
         }
     }
+
+    public void SpawnGamePlayerFor(ulong clientId)
+    {
+        // 로비에서 사용하던 PlayerObject 제거
+        if (NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject != null)
+        {
+            var oldObj = NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject;
+            oldObj.Despawn();
+        }
+
+        // 역할 결정
+        GameManager.Instance.RegisterClient(clientId);
+        GameManager.Instance.EnsureMonsterSelected();
+
+        bool isMonster = GameManager.Instance.IsMonster(clientId);
+
+        GameObject prefab = isMonster ? monsterPrefab : personPrefab;
+
+        // 실제 게임용 플레이어 스폰
+        var newObj = Instantiate(prefab);
+        newObj.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId);
+
+        Debug.Log($"[ServerBootstrap] GameScene Spawn: client {clientId}, Monster={isMonster}");
+    }
+
 }

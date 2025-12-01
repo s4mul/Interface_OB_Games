@@ -51,6 +51,8 @@ public class ClientRelay : NetworkBehaviour
         while (!op.isDone)
             yield return null;
 
+        SceneManager.SetActiveScene(SceneManager.GetSceneByName(sceneName));
+
         Debug.Log($"[ClientRelay] Scene '{sceneName}' loaded. Notifying server...");
         NotifySceneLoadedServerRpc(sceneName);
     }

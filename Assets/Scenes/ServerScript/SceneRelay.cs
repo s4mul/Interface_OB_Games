@@ -121,6 +121,10 @@ public class SceneRelay : NetworkBehaviour
         else if (sceneName == gameSceneName)
         {
             gameLoadedClients.Add(clientId);
+
+            var bootstrap = FindObjectOfType<ServerBootstrap>();
+            bootstrap.SpawnGamePlayerFor(clientId);
+
             TryPlaceAllPlayers();
         }
         else

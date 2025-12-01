@@ -12,6 +12,8 @@ public class StartGameSpriteButton : MonoBehaviour
         
     }
 
+
+    
     private void OnMouseDown()
     {
         Debug.Log("[SpriteButton] Start Game clicked.");
@@ -24,4 +26,7 @@ public class StartGameSpriteButton : MonoBehaviour
 
         ClientRelay.LocalInstance.RequestSceneChange(gameSceneName);
     }
+
+    
 }
+

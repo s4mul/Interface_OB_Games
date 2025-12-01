@@ -1,40 +1,50 @@
-using System;
-using Unity.Netcode;
-using Unity.VisualScripting;
+using System.Collections.Generic;
 using UnityEngine;
+using Unity.Netcode;
 
-enum Role {
-    MONSTER = 1,
-    PERSON = 0
-};
-
-public class GameManager : NetworkBehaviour
+public class GameManager : MonoBehaviour
 {
-    [SerializeField] private GameObject monsterPrefab;
-    [SerializeField] private GameObject personPrefab;
-    private GameObject spawnedObject;
-    private void Awake()
+    public static GameManager Instance;
+
+    private List<ulong> connectedClients = new();
+    private bool monsterSelected = false;
+
+    public ulong MonsterId { get; private set; }
+
+    void Awake()
     {
-        // Subscribe once when the game starts
-        NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else Destroy(gameObject);
     }
 
-    private void OnClientConnected(ulong clientId)
+    // 서버에서 호출됨
+    public void RegisterClient(ulong clientId)
     {
-        if (!NetworkManager.Singleton.IsServer) return;
-
-        Role role = figureOutRole(clientId);
-        if (role == Role.MONSTER)
-            spawnedObject = Instantiate(monsterPrefab);
-        else
-            spawnedObject = Instantiate(personPrefab);
-        spawnedObject.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId);
-            
+        if (!connectedClients.Contains(clientId))
+            connectedClients.Add(clientId);
     }
 
-    private Role figureOutRole(ulong clientId)
+    // 몬스터는 1번만 랜덤 결정
+    public void EnsureMonsterSelected()
     {
-        if (clientId == NetworkManager.ServerClientId) return Role.MONSTER;
-        return Role.PERSON;
+        if (monsterSelected) return;
+
+        if (connectedClients.Count > 0)
+        {
+            int index = Random.Range(0, connectedClients.Count);
+            MonsterId = connectedClients[index];
+            monsterSelected = true;
+
+            Debug.Log($"[GameManager] Monster selected: {MonsterId}");
+        }
+    }
+
+    public bool IsMonster(ulong clientId)
+    {
+        return clientId == MonsterId;
     }
 }

@@ -22,7 +22,7 @@ MonoBehaviour:
   m_Scenes:
   - m_enabled: 1
     m_path: Assets/Scenes/NetworkScene.unity
-  - m_enabled: 1
+  - m_enabled: 0
     m_path: Assets/Scenes/InitScene.unity
   - m_enabled: 1
     m_path: Assets/Scenes/Game.unity

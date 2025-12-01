@@ -71,5 +71,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  monsterPrefab: {fileID: 1232683612259465180, guid: d6a65b230a960044eb055f8825addaad, type: 3}
-  personPrefab: {fileID: 1701649160430667347, guid: 0fb4d33b4d8a16a4db47e002c1d6dc24, type: 3}
+  monsterPrefab: {fileID: 1232683612259465180, guid: f3d8722fb495de24a8440d7d48055eac, type: 3}
+  personPrefab: {fileID: 1701649160430667347, guid: 77054d32185d4b4439b638629eb7709d, type: 3}
