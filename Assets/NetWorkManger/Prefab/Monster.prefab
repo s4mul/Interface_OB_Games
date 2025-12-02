@@ -129,7 +129,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 3719162220
+  GlobalObjectIdHash: 3075827207
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -304,7 +304,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5423654316993279375}
   - component: {fileID: 312904185677745468}
-  - component: {fileID: 4149109319762013939}
+  - component: {fileID: 1826972650558859182}
   m_Layer: 0
   m_Name: InteractionDetector
   m_TagString: Untagged
@@ -321,7 +321,7 @@ Transform:
   m_GameObject: {fileID: 2228275159180922413}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.02, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -362,8 +362,8 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 0.2
---- !u!114 &4149109319762013939
+  m_Radius: 0.15
+--- !u!114 &1826972650558859182
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -372,7 +372,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2228275159180922413}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5938dd105313e44ea87e0b140c90d2c, type: 3}
+  m_Script: {fileID: 11500000, guid: fe10e99b0a8974a4a92ea334e171df7d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   inputActions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
