@@ -4,6 +4,8 @@ using Unity.Netcode.Components;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections;
+
 
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(NetworkObject))]
@@ -33,6 +35,11 @@ public class BasePlayer : NetworkBehaviour
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Owner
     );
+    private NetworkVariable<bool> isDead = new(
+        false,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server
+    );
 
     // 바라보는 방향 (true = 오른쪽, false = 왼쪽)
     private NetworkVariable<bool> facingRight = new(
@@ -49,32 +56,65 @@ public class BasePlayer : NetworkBehaviour
     // OnNetworkSpawn은 네트워크 관련 초기화에 사용
     public override void OnNetworkSpawn()
     {
+        base.OnNetworkSpawn();
         // 플레이어는 씬 전환에도 유지되어야 함
         DontDestroyOnLoad(gameObject);
-
+        
         if (IsOwner)
         {
             // Enable the action map for local player
             var map = inputActions.FindActionMap("Player");
             map.Enable();
-
-            // Cache movement action
             moveAction = map.FindAction("Move");
+
+            // Set camera to follow this player
+            Debug.Log($"[BasePlayer] set cam\n");
+            StartCoroutine(AssignCameraDelayed());
         }
 
         // 네트워크 값 변경 시 애니메이션/스프라이트 갱신
         isRunning.OnValueChanged += OnIsRunningChanged;
         facingRight.OnValueChanged += OnFacingRightChanged;
+        isDead.OnValueChanged += OnDeathStateChanged;
+
 
         // 스폰 시 초기 상태 반영
         OnIsRunningChanged(false, isRunning.Value);
         OnFacingRightChanged(true, facingRight.Value);
     }
 
+    private IEnumerator AssignCameraDelayed()
+    {
+        CameraFollowController cam = null;
+
+        // 카메라가 생성될 때까지 계속 대기
+        while (cam == null)
+        {
+            yield return null;
+
+            if (Camera.main != null)
+                cam = Camera.main.GetComponent<CameraFollowController>();
+
+            if (cam == null)
+                cam = FindObjectOfType<CameraFollowController>();
+        }
+
+        Debug.Log("[BasePlayer] Camera follow assigned.");
+        cam.SetTarget(this.transform);
+    }
+
+
     public override void OnNetworkDespawn()
     {
         isRunning.OnValueChanged -= OnIsRunningChanged;
         facingRight.OnValueChanged -= OnFacingRightChanged;
+        isDead.OnValueChanged -= OnDeathStateChanged;
+
+    }
+    private void OnDeathStateChanged(bool prev, bool current)
+    {
+        if (current == true)
+            animator.SetTrigger("catched");
     }
 
     private void OnIsRunningChanged(bool previous, bool current)
@@ -154,7 +194,9 @@ public class BasePlayer : NetworkBehaviour
         if (!IsServer) return;
 
         // Rigidbody의 속도(velocity)를 직접 설정합니다.
-        rb.linearVelocity = input * speed;
+        rb.MovePosition(rb.position + input * speed * Time.fixedDeltaTime);
+
+        //rb.linearVelocity = input * speed;
     }
 
     // REMOVED: FlipCharacterX() 함수는 HandleInputAndVisuals()로 통합되었습니다.

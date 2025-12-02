@@ -11,6 +11,8 @@ public class ServerBootstrap : MonoBehaviour
     [Header("Prefabs")]
     [SerializeField] private GameObject sceneRelayPrefab;   // NetworkObject 포함
     [SerializeField] private GameObject clientRelayPrefab;  // NetworkObject 포함
+    [SerializeField] private GameObject gameManagerPrefab;
+
 
     [Header("Gameplay")]
     [SerializeField] private string initialSceneName = "lobbyScene";
@@ -68,9 +70,26 @@ public class ServerBootstrap : MonoBehaviour
         Debug.Log("[ServerBootstrap] Netcode server started.");
 
         SpawnSceneRelayIfNeeded();
+        SpawnGameManagerIfNeeded();
 
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+    }
+    private void SpawnGameManagerIfNeeded()
+    {
+        if (GameManager.Instance != null)
+            return; // 이미 존재함
+
+        if (gameManagerPrefab == null)
+        {
+            Debug.LogError("[ServerBootstrap] GameManager prefab is not assigned!");
+            return;
+        }
+
+        var go = Instantiate(gameManagerPrefab);
+        DontDestroyOnLoad(go);
+
+        Debug.Log("[ServerBootstrap] GameManager spawned on server.");
     }
 
     private void SpawnSceneRelayIfNeeded()

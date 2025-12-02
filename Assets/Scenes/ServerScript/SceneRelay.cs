@@ -121,11 +121,13 @@ public class SceneRelay : NetworkBehaviour
         else if (sceneName == gameSceneName)
         {
             gameLoadedClients.Add(clientId);
-
+            TrySpawnGamePlayer(clientId);
+            /*
             var bootstrap = FindObjectOfType<ServerBootstrap>();
             bootstrap.SpawnGamePlayerFor(clientId);
 
             TryPlaceAllPlayers();
+            */
         }
         else
         {
@@ -162,6 +164,23 @@ public class SceneRelay : NetworkBehaviour
 
         Debug.Log($"[SceneRelay] Spawned player for client {clientId}");
     }
+
+    private void TrySpawnGamePlayer(ulong clientId)
+    {
+        if (!IsServer) return;
+        if (spawnedPlayers.Contains(clientId)) return;
+
+        var bootstrap = FindObjectOfType<ServerBootstrap>();
+        if (bootstrap == null)
+        {
+            Debug.LogWarning("[SceneRelay] ServerBootstrap not found yet. Delaying spawn...");
+            return;   // GameManager / Prefab 아직 초기화 전이면 빠져나오고 다음 NotifyClientLoaded 때 다시 시도됨
+        }
+        Debug.LogWarning("[SceneRelay] Try Spawn...\n");
+        bootstrap.SpawnGamePlayerFor(clientId);
+        spawnedPlayers.Add(clientId);
+    }
+
 
     // ───────────────────────────────────
     // 게임씬에서 모든 플레이어를 SpawnPoint 위치로 배치
