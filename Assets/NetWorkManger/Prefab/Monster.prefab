@@ -18,7 +18,7 @@ GameObject:
   - component: {fileID: -8369705592560574517}
   - component: {fileID: 7516410355679016317}
   - component: {fileID: -215544080530354319}
-  m_Layer: 6
+  m_Layer: 7
   m_Name: Monster
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -292,7 +292,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ad4f70af4ecccc44bae1a8db6f99471, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  viewRadius: 5
+  viewRadius: 2
   targetLayer:
     serializedVersion: 2
     m_Bits: 64
@@ -359,7 +359,7 @@ GameObject:
   - component: {fileID: 5423654316993279375}
   - component: {fileID: 312904185677745468}
   - component: {fileID: 4149109319762013939}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: InteractionDetector
   m_TagString: Untagged
   m_Icon: {fileID: 0}
